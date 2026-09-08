@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Para Ruby Esmeralda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #060613;
+    overflow: hidden;
+    font-family: sans-serif;
+  }
+
+  /* ================= PANTALLA 1: ENTRADA ================= */
+  #entrada {
+    position: fixed;
+    inset: 0;
+    background: #000000;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6% 0;
+    z-index: 10;
+    transition: opacity 1s ease;
+    will-change: opacity;
+    overflow: hidden;
+  }
+
+  /* estrellitas realistas: tamaños/brillos variados, sin verse animadas de videojuego */
+  .estrella {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff 0%, #ff8aa8 40%, rgba(255,45,85,0) 75%);
+    will-change: opacity, transform;
+    animation: titilar 4.5s ease-in-out infinite;
+  }
+  @keyframes titilar {
+    0%, 100% { opacity: 0.1; transform: scale(0.85); }
+    50% { opacity: 0.85; transform: scale(1); }
+  }
+  .chispa {
+    position: absolute;
+    color: #ff5577;
+    font-size: 10px;
+    text-shadow: 0 0 5px rgba(255,45,85,0.7);
+    will-change: opacity;
+    animation: titilar 5s ease-in-out infinite;
+  }
+
+  .titulo-neon {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: #ff2d4d;
+    text-shadow: 0 0 10px rgba(255,45,77,0.45);
+    font-size: 1.9em;
+    line-height: 1.2;
+    text-align: center;
+    padding: 0 10px;
+    z-index: 3;
+    animation: flotarTitulo 3.2s ease-in-out infinite;
+    will-change: transform;
+  }
+  @keyframes flotarTitulo {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-7px); }
+  }
+
+  /* --- corazón central de la pantalla de inicio --- */
+  .heart-inside {
+    width: 28vw;
+    max-width: 120px;
+    filter: drop-shadow(0 0 16px #ff1a4d) drop-shadow(0 0 40px #e6005a) drop-shadow(0 0 65px rgba(255,25,65,0.65));
+    animation: latidoSuave 2.4s ease-in-out infinite;
+    will-change: transform;
+    z-index: 3;
+  }
+
+  /* --- botón + corazon lateral --- */
+  .fila-boton {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    z-index: 3;
+  }
+
+  #btnEntrar {
+    background: rgba(255, 45, 77, 0.25);
+    color: #ffffff;
+    border: 1px solid rgba(255,255,255,0.35);
+    padding: 9px 22px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 1em;
+    letter-spacing: 0.3px;
+    border-radius: 40px;
+    cursor: pointer;
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    box-shadow:
+      0 4px 18px rgba(255, 25, 65, 0.45),
+      inset 0 1px 1px rgba(255,255,255,0.5),
+      inset 0 -2px 4px rgba(255, 45, 77, 0.3);
+    text-shadow: 0 0 6px rgba(255,255,255,0.4);
+    transition: transform 0.15s ease;
+  }
+  #btnEntrar:active { transform: scale(0.94); }
+
+  .mini-heart {
+    font-size: 1.6em;
+    color: #ff2d55;
+    text-shadow: 0 0 8px #ff2d55, 0 0 16px #ff2d55;
+    animation: latidoSuave 1.8s ease-in-out infinite;
+    will-change: transform;
+  }
+  @keyframes latidoSuave {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-4px) scale(1.05); }
+  }
+
+  /* ================= PANTALLA 2: ESPACIO 3D DEL CORAZÓN ================= */
+  #corazonScreen {
+    position: fixed;
+    inset: 0;
+    background: #03030a;
+    display: none;
+    overflow: hidden;
+    z-index: 1;
+    touch-action: none;
+  }
+
+  #galaxyCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+  }
+
+  #instruccion {
+    position: absolute;
+    bottom: 6%;
+    width: 100%;
+    text-align: center;
+    color: #fff;
+    text-shadow: 0 0 8px #ff2d55;
+    z-index: 4;
+    font-size: 0.95em;
+    letter-spacing: 0.5px;
+    opacity: 0.9;
+    transition: opacity 1.5s ease;
+    pointer-events: none;
+  }
+
+  #cargando3d {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #ff2d55;
+    font-family: 'Great Vibes', cursive;
+    font-size: 1.8em;
+    text-shadow: 0 0 10px #ff2d55;
+    z-index: 5;
+  }
+
+  /* ================= PANTALLA 0: ENTRADA AL LINK (warp de corazones) ================= */
+  #warpEntrada {
+    position: fixed;
+    inset: 0;
+    background: #000000;
+    z-index: 50;
+    transition: opacity 0.6s ease;
+  }
+  #warpCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= PANTALLA 0: EFECTO DE ENTRADA (corazones a la velocidad de la luz) ================= -->
+<div id="warpEntrada">
+  <canvas id="warpCanvas"></canvas>
+</div>
+
+<!-- ================= PANTALLA DE ENTRADA ================= -->
+<div id="entrada">
+  <h1 class="titulo-neon">Hola mi gordita</h1>
+
+  <svg class="heart-inside" viewBox="0 0 32 29" xmlns="http://www.w3.org/2000/svg">
+    <path d="M16 29 C16 29 0 18 0 8.5 C0 3 4 0 8 0 C11 0 14 2 16 6 C18 2 21 0 24 0 C28 0 32 3 32 8.5 C32 18 16 29 16 29 Z"
+          fill="#ff2d55"/>
+  </svg>
+
+  <div class="fila-boton">
+    <button id="btnEntrar">Entra a mi corazón</button>
+    <span class="mini-heart">❤</span>
+  </div>
+</div>
+
+<!-- ================= PANTALLA DEL ESPACIO 3D DEL CORAZÓN ================= -->
+<div id="corazonScreen">
+  <div id="cargando3d">Cargando tu corazón...</div>
+  <canvas id="galaxyCanvas"></canvas>
+  <div id="instruccion">👆 Desliza para mirar alrededor · pellizca o usa la rueda para acercarte</div>
+</div>
+
+<script>
+  // ---------- Efecto de entrada al link: viaje entre corazones a "velocidad de la luz" ----------
+  (function () {
+    const canvas = document.getElementById('warpCanvas');
+    const ctx = canvas.getContext('2d');
+    let W, H;
+    function ajustarTamano() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    ajustarTamano();
+    window.addEventListener('resize', ajustarTamano);
+
+    const CANTIDAD = 130;
+    const particulas = [];
+    function crearParticula(distribuidaEnProfundidad) {
+      return {
+        x: Math.random() * 2 - 1,
+        y: Math.random() * 2 - 1,
+        z: distribuidaEnProfundidad ? Math.random() * 2.2 + 0.15 : 2.4,
+        pz: 0
+      };
+    }
+    for (let i = 0; i < CANTIDAD; i++) particulas.push(crearParticula(true));
+
+    function dibujarCorazon(cx, cy, tam, alpha) {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(tam, tam);
+      ctx.beginPath();
+      ctx.moveTo(0, 3.4);
+      ctx.bezierCurveTo(-7, -4, -15, 2.2, 0, 11);
+      ctx.bezierCurveTo(15, 2.2, 7, -4, 0, 3.4);
+      ctx.closePath();
+      ctx.fillStyle = `rgba(255, ${70 + Math.floor(Math.random() * 50)}, ${110 + Math.floor(Math.random() * 60)}, ${alpha})`;
+      ctx.shadowColor = '#ff2d55';
+      ctx.shadowBlur = 10;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    const DURACION = 2400; // ms (dentro del rango de 2 a 3 segundos)
+    const inicioWarp = performance.now();
+
+    function cuadro(t) {
+      const transcurrido = t - inicioWarp;
+      const avance = Math.min(transcurrido / DURACION, 1);
+      // arranca suave, acelera un poco a la mitad, sin llegar a ser demasiado rápido
+      const velocidad = 0.008 + Math.sin(avance * Math.PI) * 0.045;
+
+      ctx.fillStyle = 'rgba(0,0,0,0.32)';
+      ctx.fillRect(0, 0, W, H);
+
+      const cx = W / 2, cy = H / 2;
+      const f = Math.min(W, H) * 0.6;
+
+      particulas.forEach(p => {
+        p.pz = p.z;
+        p.z -= velocidad;
+        if (p.z <= 0.05) {
+          Object.assign(p, crearParticula(false));
+          return;
+        }
+        const sx = cx + (p.x / p.z) * f;
+        const sy = cy + (p.y / p.z) * f;
+        const psx = cx + (p.x / p.pz) * f;
+        const psy = cy + (p.y / p.pz) * f;
+        const escala = Math.max(0.12, 1 - p.z / 2.6);
+        const alpha = Math.min(1, escala * 1.5);
+
+        ctx.strokeStyle = `rgba(255,90,130,${alpha * 0.55})`;
+        ctx.lineWidth = escala * 2.2;
+        ctx.beginPath();
+        ctx.moveTo(psx, psy);
+        ctx.lineTo(sx, sy);
+        ctx.stroke();
+
+        dibujarCorazon(sx, sy, escala * 1.7, alpha);
+      });
+
+      if (avance < 1) {
+        requestAnimationFrame(cuadro);
+      } else {
+        const warpDiv = document.getElementById('warpEntrada');
+        warpDiv.style.opacity = '0';
+        setTimeout(() => { warpDiv.style.display = 'none'; }, 650);
+      }
+    }
+    requestAnimationFrame(cuadro);
+  })();
+
+  // ---------- Estrellas y chispas rojas (cantidad reducida = más fluido) ----------
+  const entrada = document.getElementById('entrada');
+  const frag1 = document.createDocumentFragment();
+
+  for (let i = 0; i < 90; i++) {
+    const e = document.createElement('div');
+    e.className = 'estrella';
+    const tam = 1 + Math.random() * 3;
+    e.style.width = tam + 'px';
+    e.style.height = tam + 'px';
+    e.style.left = Math.random() * 100 + 'vw';
+    e.style.top = Math.random() * 100 + 'vh';
+    e.style.animationDelay = (Math.random() * 4.5) + 's';
+    e.style.animationDuration = (3.5 + Math.random() * 3) + 's';
+    frag1.appendChild(e);
+  }
+  const simbolos = ['✦', '✧', '·', '⋆'];
+  for (let i = 0; i < 26; i++) {
+    const c = document.createElement('div');
+    c.className = 'chispa';
+    c.textContent = simbolos[Math.floor(Math.random() * simbolos.length)];
+    c.style.fontSize = (8 + Math.random() * 10) + 'px';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.top = Math.random() * 100 + 'vh';
+    c.style.animationDelay = (Math.random() * 5) + 's';
+    c.style.animationDuration = (4 + Math.random() * 3) + 's';
+    frag1.appendChild(c);
+  }
+  entrada.appendChild(frag1);
+
+  // ---------- Transición a la pantalla del espacio 3D ----------
+  let galaxiaIniciada = false;
+  document.getElementById('btnEntrar').addEventListener('click', () => {
+    entrada.style.opacity = '0';
+    setTimeout(() => {
+      entrada.style.display = 'none';
+      const corazonScreen = document.getElementById('corazonScreen');
+      corazonScreen.style.display = 'block';
+      if (!galaxiaIniciada) {
+        galaxiaIniciada = true;
+        initGalaxy();
+      }
+      setTimeout(() => {
+        const ins = document.getElementById('instruccion');
+        if (ins) ins.style.opacity = '0';
+      }, 4500);
+    }, 900);
+  }, { once: true });
+
+  /* =======================================================
+     ESPACIO 3D: galaxia con corazón central navegable
+     ======================================================= */
+  function initGalaxy() {
+    const canvas = document.getElementById('galaxyCanvas');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x03030a, 0.018);
+
+    const camera = new THREE.PerspectiveCamera(
+      70, window.innerWidth / window.innerHeight, 0.1, 100
+    );
+    camera.rotation.order = 'YXZ';
+    camera.position.set(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x03030a);
+
+    // ---- luces ----
+    scene.add(new THREE.AmbientLight(0x552233, 1.1));
+    const luzCorazon = new THREE.PointLight(0xff1a4d, 7, 26);
+    luzCorazon.position.set(0, 0, -4);
+    scene.add(luzCorazon);
+
+    // ---- textura de brillo circular (reusable) ----
+    function crearTexturaGlow(colorCentro) {
+      const size = 128;
+      const c = document.createElement('canvas');
+      c.width = size; c.height = size;
+      const ctx = c.getContext('2d');
+      const g = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+      g.addColorStop(0, colorCentro);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, size, size);
+      return new THREE.CanvasTexture(c);
+    }
+
+    // ---- forma de corazón reutilizable ----
+    function crearFormaCorazon(s) {
+      const shape = new THREE.Shape();
+      shape.moveTo(0, 0);
+      shape.bezierCurveTo(0, -3*s, -6*s, -3*s, -6*s, 2*s);
+      shape.bezierCurveTo(-6*s, 5*s, -3*s, 7.5*s, 0, 10*s);
+      shape.bezierCurveTo(3*s, 7.5*s, 6*s, 5*s, 6*s, 2*s);
+      shape.bezierCurveTo(6*s, -3*s, 0, -3*s, 0, 0);
+      return shape;
+    }
+
+    function crearMallaCorazon(s, color, intensidadEmisiva) {
+      const forma = crearFormaCorazon(s);
+      const geo = new THREE.ExtrudeGeometry(forma, {
+        depth: 1.6*s, bevelEnabled: true, bevelThickness: 0.4*s, bevelSize: 0.4*s, bevelSegments: 2
+      });
+      geo.center();
+      geo.rotateZ(Math.PI); // corrige la orientación: antes salía de cabeza
+      const mat = new THREE.MeshStandardMaterial({
+        color: color, emissive: color, emissiveIntensity: intensidadEmisiva,
+        metalness: 0.25, roughness: 0.35
+      });
+      return new THREE.Mesh(geo, mat);
+    }
+
+    // ---- corazón central (más pequeño, muy brillante) ----
+    const corazonCentral = crearMallaCorazon(0.17, 0xff1a4d, 1.6);
+    corazonCentral.position.set(0, 0, -4.2);
+    scene.add(corazonCentral);
+
+    // aura roja tipo neón detrás del corazón (doble capa para más brillo)
+    const auraTex = crearTexturaGlow('rgba(255,25,65,1)');
+    const auraMat = new THREE.SpriteMaterial({
+      map: auraTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    const aura = new THREE.Sprite(auraMat);
+    aura.scale.set(5.5, 5.5, 1);
+    aura.position.set(0, 0, -4.4);
+    scene.add(aura);
+
+    const auraExterior = new THREE.Sprite(auraMat.clone());
+    auraExterior.material.opacity = 0.55;
+    auraExterior.scale.set(9, 9, 1);
+    auraExterior.position.set(0, 0, -4.4);
+    scene.add(auraExterior);
+
+    // (los corazones pequeños giratorios se quitaron por petición)
+
+    // ---- partículas: puntitos rojos y blancos tipo estrellas (campo ENORME y muy brillante) ----
+    const puntoTex = crearTexturaGlow('rgba(255,255,255,1)');
+    const cantidadPuntos = 30000;
+    const posiciones = new Float32Array(cantidadPuntos * 3);
+    const colores = new Float32Array(cantidadPuntos * 3);
+    const colorRojo = new THREE.Color(0xff2d55);
+    const colorBlanco = new THREE.Color(0xffffff);
+    for (let i = 0; i < cantidadPuntos; i++) {
+      const [x, y, z] = posicionEsferaAleatoria(4, 40);
+      posiciones[i*3] = x; posiciones[i*3+1] = y; posiciones[i*3+2] = z;
+      const col = Math.random() < 0.3 ? colorRojo : colorBlanco;
+      colores[i*3] = col.r; colores[i*3+1] = col.g; colores[i*3+2] = col.b;
+    }
+    const geoPuntos = new THREE.BufferGeometry();
+    geoPuntos.setAttribute('position', new THREE.BufferAttribute(posiciones, 3));
+    geoPuntos.setAttribute('color', new THREE.BufferAttribute(colores, 3));
+    const matPuntos = new THREE.PointsMaterial({
+      size: 0.16, map: puntoTex, vertexColors: true, transparent: true,
+      opacity: 1, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true
+    });
+    scene.add(new THREE.Points(geoPuntos, matPuntos));
+
+    // capa extra de estrellas grandes y muy brillantes, mezcladas entre las anteriores
+    const cantidadBrillantes = 2600;
+    const posBrillantes = new Float32Array(cantidadBrillantes * 3);
+    const colBrillantes = new Float32Array(cantidadBrillantes * 3);
+    for (let i = 0; i < cantidadBrillantes; i++) {
+      const [x, y, z] = posicionEsferaAleatoria(4, 40);
+      posBrillantes[i*3] = x; posBrillantes[i*3+1] = y; posBrillantes[i*3+2] = z;
+      const col = Math.random() < 0.4 ? colorRojo : colorBlanco;
+      colBrillantes[i*3] = col.r; colBrillantes[i*3+1] = col.g; colBrillantes[i*3+2] = col.b;
+    }
+    const geoBrillantes = new THREE.BufferGeometry();
+    geoBrillantes.setAttribute('position', new THREE.BufferAttribute(posBrillantes, 3));
+    geoBrillantes.setAttribute('color', new THREE.BufferAttribute(colBrillantes, 3));
+    const matBrillantes = new THREE.PointsMaterial({
+      size: 0.42, map: puntoTex, vertexColors: true, transparent: true,
+      opacity: 1, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true
+    });
+    scene.add(new THREE.Points(geoBrillantes, matBrillantes));
+
+    // ---- estrellas "madre" blancas con destello de cruz, repartidas por todos lados ----
+    function crearTexturaEstrellaCruz() {
+      const size = 128;
+      const c = document.createElement('canvas');
+      c.width = size; c.height = size;
+      const ctx = c.getContext('2d');
+      const cx = size / 2, cy = size / 2;
+      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, size / 2);
+      glow.addColorStop(0, 'rgba(255,255,255,1)');
+      glow.addColorStop(0.25, 'rgba(255,255,255,0.55)');
+      glow.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, size, size);
+      ctx.globalCompositeOperation = 'lighter';
+      const beamH = ctx.createLinearGradient(0, cy, size, cy);
+      beamH.addColorStop(0, 'rgba(255,255,255,0)');
+      beamH.addColorStop(0.5, 'rgba(255,255,255,0.95)');
+      beamH.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = beamH;
+      ctx.fillRect(0, cy - 1.5, size, 3);
+      const beamV = ctx.createLinearGradient(cx, 0, cx, size);
+      beamV.addColorStop(0, 'rgba(255,255,255,0)');
+      beamV.addColorStop(0.5, 'rgba(255,255,255,0.95)');
+      beamV.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = beamV;
+      ctx.fillRect(cx - 1.5, 0, 3, size);
+      return new THREE.CanvasTexture(c);
+    }
+    const texEstrellaCruz = crearTexturaEstrellaCruz();
+    const estrellasCruz = [];
+    const cantidadCruz = 160;
+    for (let i = 0; i < cantidadCruz; i++) {
+      const mat = new THREE.SpriteMaterial({
+        map: texEstrellaCruz, transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending
+      });
+      const sprite = new THREE.Sprite(mat);
+      const [x, y, z] = posicionEsferaAleatoria(6, 38);
+      sprite.position.set(x, y, z);
+      const escala = 0.9 + Math.random() * 1.6;
+      sprite.scale.set(escala, escala, 1);
+      scene.add(sprite);
+      estrellasCruz.push({ sprite, fase: Math.random() * Math.PI * 2, escalaBase: escala });
+    }
+
+    // ---- textos flotantes: Rubí / Te amo Rubí ----
+    function crearTexturaTexto(texto, color) {
+      const c = document.createElement('canvas');
+      c.width = 384; c.height = 96;
+      const ctx = c.getContext('2d');
+      let tamFuente = 46;
+      ctx.font = `${tamFuente}px "Great Vibes", cursive`;
+      // ajusta el tamaño de fuente para que las frases largas no se corten
+      while (ctx.measureText(texto).width > c.width - 20 && tamFuente > 22) {
+        tamFuente -= 2;
+        ctx.font = `${tamFuente}px "Great Vibes", cursive`;
+      }
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 14;
+      ctx.fillStyle = color;
+      ctx.fillText(texto, c.width / 2, 52);
+      return new THREE.CanvasTexture(c);
+    }
+
+    const variantesTexto = [
+      { texto: 'Rubí', color: '#ffffff' },
+      { texto: 'Rubí', color: '#ff2d55' },
+      { texto: 'Rubí te amo', color: '#ffffff' },
+      { texto: 'Rubí te amo', color: '#ff2d55' },
+      { texto: 'Rubí te extraño', color: '#ffffff' },
+      { texto: 'Rubí te extraño', color: '#ff2d55' },
+      { texto: 'Rubí te quiero', color: '#ffffff' },
+      { texto: 'Rubí te quiero', color: '#ff2d55' },
+      { texto: 'Te adoro Rubí', color: '#ffffff' },
+      { texto: 'Te adoro Rubí', color: '#ff2d55' }
+    ];
+    const texturasTexto = variantesTexto.map(v => crearTexturaTexto(v.texto, v.color));
+
+    const cantidadTextos = 90;
+    for (let i = 0; i < cantidadTextos; i++) {
+      const idx = Math.floor(Math.random() * texturasTexto.length);
+      const mat = new THREE.SpriteMaterial({
+        map: texturasTexto[idx], transparent: true, depthWrite: false
+      });
+      const sprite = new THREE.Sprite(mat);
+      const [x, y, z] = posicionEsferaAleatoria(6, 32);
+      sprite.position.set(x, y, z);
+      const escala = 1.2 + Math.random() * 1.5;
+      sprite.scale.set(escala * 1.6, escala * 0.55, 1);
+      scene.add(sprite);
+    }
+
+    function posicionEsferaAleatoria(rMin, rMax) {
+      const r = rMin + Math.random() * (rMax - rMin);
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const x = r * Math.sin(phi) * Math.cos(theta);
+      const y = r * Math.sin(phi) * Math.sin(theta);
+      const z = r * Math.cos(phi);
+      return [x, y, z];
+    }
+
+    // ---- auroras boreales realistas: desvanecidas en todos los bordes, sin cortes ----
+    function crearTexturaAurora() {
+      // textura con múltiples franjas verticales de "cortina" y desvanecido total en
+      // los 4 bordes (arriba/abajo/izq/der), para que nunca se vea una orilla recta
+      const w = 256, h = 512;
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+
+      // capa base: cortina de franjas suaves tipo velo (en blanco, se tiñe con material.color)
+      const franjas = 9;
+      for (let f = 0; f < franjas; f++) {
+        const cx = (f + 0.5) / franjas * w + (Math.random() - 0.5) * 18;
+        const anchoFranja = w / franjas * (1.4 + Math.random() * 0.8);
+        const g = ctx.createLinearGradient(cx - anchoFranja / 2, 0, cx + anchoFranja / 2, 0);
+        const alfa = 0.35 + Math.random() * 0.35;
+        g.addColorStop(0, 'rgba(255,255,255,0)');
+        g.addColorStop(0.5, `rgba(255,255,255,${alfa})`);
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(cx - anchoFranja / 2, 0, anchoFranja, h);
+      }
+
+      // máscara vertical: desvanece por completo arriba y abajo (sin corte duro)
+      ctx.globalCompositeOperation = 'destination-in';
+      const vGrad = ctx.createLinearGradient(0, 0, 0, h);
+      vGrad.addColorStop(0, 'rgba(0,0,0,0)');
+      vGrad.addColorStop(0.18, 'rgba(0,0,0,0.9)');
+      vGrad.addColorStop(0.55, 'rgba(0,0,0,1)');
+      vGrad.addColorStop(0.85, 'rgba(0,0,0,0.5)');
+      vGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = vGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      // máscara horizontal: desvanece por completo los lados izquierdo y derecho
+      ctx.globalCompositeOperation = 'destination-in';
+      const hGrad = ctx.createLinearGradient(0, 0, w, 0);
+      hGrad.addColorStop(0, 'rgba(0,0,0,0)');
+      hGrad.addColorStop(0.22, 'rgba(0,0,0,1)');
+      hGrad.addColorStop(0.78, 'rgba(0,0,0,1)');
+      hGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = hGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.ClampToEdgeWrapping;
+      tex.wrapT = THREE.ClampToEdgeWrapping;
+      return tex;
+    }
+    const texAurora = crearTexturaAurora();
+
+    // paleta que va cambiando: rojo -> verde -> morado, ciclando
+    const paletaAurora = [
+      new THREE.Color(0xff2d55), // rojo
+      new THREE.Color(0x2dffb0), // verde aurora
+      new THREE.Color(0x9b3dff)  // morado
+    ];
+    function colorAuroraEnFase(fase) {
+      const n = paletaAurora.length;
+      const t = ((fase % n) + n) % n;
+      const i0 = Math.floor(t);
+      const i1 = (i0 + 1) % n;
+      const mezcla = t - i0;
+      return paletaAurora[i0].clone().lerp(paletaAurora[i1], mezcla);
+    }
+
+    const auroras = [];
+    const numAuroras = 12;
+    for (let i = 0; i < numAuroras; i++) {
+      const geo = new THREE.PlaneGeometry(26, 16, 50, 26);
+      const colorInicial = colorAuroraEnFase(Math.random() * 3);
+      const mat = new THREE.MeshBasicMaterial({
+        map: texAurora, color: colorInicial, transparent: true, side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.85
+      });
+      const malla = new THREE.Mesh(geo, mat);
+      const angulo = (i / numAuroras) * Math.PI * 2 + Math.random() * 0.4;
+      const radio = 20 + Math.random() * 12;
+      malla.position.set(Math.cos(angulo) * radio, 1 + Math.random() * 12, Math.sin(angulo) * radio);
+      malla.rotation.y = -angulo + Math.PI / 2;
+      malla.rotation.z = (Math.random() - 0.5) * 0.3;
+      scene.add(malla);
+      auroras.push({
+        malla, geo,
+        fase: Math.random() * 10,
+        faseColor: Math.random() * 3,
+        velColor: 0.05 + Math.random() * 0.06,
+        anguloOrbita: angulo,
+        radioOrbita: radio,
+        alturaBase: malla.position.y,
+        velOrbita: (Math.random() - 0.5) * 0.02
+      });
+    }
+
+    // ---- estrellas fugaces que cruzan el cielo de vez en cuando ----
+    const fugaces = [];
+
+    function crearEstrellaFugaz(tiempoActual) {
+      const dir = new THREE.Vector3(
+        (Math.random() - 0.5),
+        (Math.random() - 0.5) * 0.5,
+        (Math.random() - 0.5)
+      ).normalize();
+
+      const inicio = new THREE.Vector3(
+        (Math.random() - 0.5) * 60,
+        (Math.random() - 0.5) * 40,
+        (Math.random() - 0.5) * 60
+      );
+
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
+      const mat = new THREE.LineBasicMaterial({
+        color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false
+      });
+      const linea = new THREE.Line(geo, mat);
+      scene.add(linea);
+
+      const cabezaMat = new THREE.SpriteMaterial({
+        map: puntoTex, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false
+      });
+      const cabeza = new THREE.Sprite(cabezaMat);
+      cabeza.scale.set(0.5, 0.5, 1);
+      scene.add(cabeza);
+
+      return {
+        linea, cabeza, dir, inicio,
+        velocidad: 20 + Math.random() * 14,
+        cola: 3 + Math.random() * 1.5,
+        inicioTiempo: tiempoActual,
+        duracion: 1.3 + Math.random() * 0.7
+      };
+    }
+
+    function programarProximaFugaz() {
+      const espera = 150 + Math.random() * 500;
+      setTimeout(() => {
+        if (fugaces.length < 18) fugaces.push(crearEstrellaFugaz(reloj.getElapsedTime()));
+        programarProximaFugaz();
+      }, espera);
+    }
+    programarProximaFugaz();
+
+    // ---- rayas de estrellas para el efecto de "viajar a la velocidad de la luz" ----
+    // (se usan solo durante los 2 segundos de la animación de entrada, ver más abajo)
+    const cantidadRayas = 2200;
+    const basePosRayas = new Float32Array(cantidadRayas * 3);
+    const dirRayas = new Float32Array(cantidadRayas * 3);
+    const posicionesRayas = new Float32Array(cantidadRayas * 2 * 3);
+    for (let i = 0; i < cantidadRayas; i++) {
+      const [x, y, z] = posicionEsferaAleatoria(5, 42);
+      const dir = new THREE.Vector3(x, y, z).normalize();
+      basePosRayas[i*3] = x; basePosRayas[i*3+1] = y; basePosRayas[i*3+2] = z;
+      dirRayas[i*3] = dir.x; dirRayas[i*3+1] = dir.y; dirRayas[i*3+2] = dir.z;
+      posicionesRayas[i*6]   = x; posicionesRayas[i*6+1] = y; posicionesRayas[i*6+2] = z;
+      posicionesRayas[i*6+3] = x - dir.x * 0.4;
+      posicionesRayas[i*6+4] = y - dir.y * 0.4;
+      posicionesRayas[i*6+5] = z - dir.z * 0.4;
+    }
+    const geoRayas = new THREE.BufferGeometry();
+    geoRayas.setAttribute('position', new THREE.BufferAttribute(posicionesRayas, 3));
+    const matRayas = new THREE.LineBasicMaterial({
+      color: 0xffffff, transparent: true, opacity: 0,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    const rayasWarp = new THREE.LineSegments(geoRayas, matRayas);
+    scene.add(rayasWarp);
+
+    function actualizarRayasWarp(largo) {
+      const pos = geoRayas.attributes.position.array;
+      for (let i = 0; i < cantidadRayas; i++) {
+        pos[i*6+3] = basePosRayas[i*3]   - dirRayas[i*3]   * largo;
+        pos[i*6+4] = basePosRayas[i*3+1] - dirRayas[i*3+1] * largo;
+        pos[i*6+5] = basePosRayas[i*3+2] - dirRayas[i*3+2] * largo;
+      }
+      geoRayas.attributes.position.needsUpdate = true;
+    }
+
+    function actualizarFugaces(tiempoActual) {
+      for (let i = fugaces.length - 1; i >= 0; i--) {
+        const f = fugaces[i];
+        const t = tiempoActual - f.inicioTiempo;
+        const progreso = t / f.duracion;
+        if (progreso >= 1) {
+          scene.remove(f.linea); f.linea.geometry.dispose(); f.linea.material.dispose();
+          scene.remove(f.cabeza); f.cabeza.material.dispose();
+          fugaces.splice(i, 1);
+          continue;
+        }
+        const avance = f.velocidad * t;
+        const puntaX = f.inicio.x + f.dir.x * avance;
+        const puntaY = f.inicio.y + f.dir.y * avance;
+        const puntaZ = f.inicio.z + f.dir.z * avance;
+        const colaX = puntaX - f.dir.x * f.cola;
+        const colaY = puntaY - f.dir.y * f.cola;
+        const colaZ = puntaZ - f.dir.z * f.cola;
+
+        const pos = f.linea.geometry.attributes.position.array;
+        pos[0] = puntaX; pos[1] = puntaY; pos[2] = puntaZ;
+        pos[3] = colaX; pos[4] = colaY; pos[5] = colaZ;
+        f.linea.geometry.attributes.position.needsUpdate = true;
+        f.cabeza.position.set(puntaX, puntaY, puntaZ);
+
+        let opacidad = 1;
+        if (progreso < 0.15) opacidad = progreso / 0.15;
+        else if (progreso > 0.7) opacidad = 1 - (progreso - 0.7) / 0.3;
+        opacidad = Math.max(0, Math.min(1, opacidad));
+        f.linea.material.opacity = opacidad * 0.85;
+        f.cabeza.material.opacity = opacidad;
+      }
+    }
+
+    // ---- controles: arrastrar para mirar alrededor (arriba/abajo/todos lados) ----
+    let yaw = 0, pitch = 0, arrastrando = false, lastX = 0, lastY = 0;
+    canvas.addEventListener('pointerdown', e => {
+      arrastrando = true; lastX = e.clientX; lastY = e.clientY;
+    });
+    window.addEventListener('pointerup', () => arrastrando = false);
+    window.addEventListener('pointercancel', () => arrastrando = false);
+    window.addEventListener('pointermove', e => {
+      if (!arrastrando) return;
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      lastX = e.clientX; lastY = e.clientY;
+      yaw -= dx * 0.005;
+      pitch -= dy * 0.005;
+      pitch = Math.max(-1.3, Math.min(1.3, pitch));
+    });
+
+    // ---- zoom real: acercarte o alejarte del corazón, que es el eje fijo de la órbita ----
+    // así, al alejarte, las estrellas te van pasando por los lados / arriba / abajo / atrás,
+    // como si de verdad estuvieras volando por el espacio, pero el corazón siempre queda al centro.
+    const RADIO_CERCA = 1.6;   // qué tanto puedes acercarte al corazón
+    const RADIO_LEJOS = 30;    // qué tanto puedes alejarte de él
+    const RADIO_LLEGADA = 4.2; // distancia normal al llegar, después del salto
+    let radio = RADIO_LEJOS;   // arrancamos muy lejos, para el efecto de llegada
+
+    // rueda del mouse (escritorio)
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      radio += e.deltaY * 0.02;
+      radio = Math.max(RADIO_CERCA, Math.min(RADIO_LEJOS, radio));
+    }, { passive: false });
+
+    // pellizco con dos dedos (móvil)
+    let distanciaPellizcoAnterior = null;
+    canvas.addEventListener('touchstart', e => {
+      if (e.touches.length === 2) {
+        arrastrando = false;
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        distanciaPellizcoAnterior = Math.hypot(dx, dy);
+      }
+    }, { passive: true });
+    canvas.addEventListener('touchmove', e => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const distanciaActual = Math.hypot(dx, dy);
+        if (distanciaPellizcoAnterior != null) {
+          const delta = distanciaActual - distanciaPellizcoAnterior;
+          radio -= delta * 0.03;
+          radio = Math.max(RADIO_CERCA, Math.min(RADIO_LEJOS, radio));
+        }
+        distanciaPellizcoAnterior = distanciaActual;
+      }
+    }, { passive: false });
+    canvas.addEventListener('touchend', e => {
+      if (e.touches.length < 2) distanciaPellizcoAnterior = null;
+    }, { passive: true });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    document.getElementById('cargando3d').style.display = 'none';
+
+    const reloj = new THREE.Clock();
+    const centroCorazon = corazonCentral.position; // eje fijo: el corazón nunca se mueve del centro
+
+    // ---- animación de llegada: "salto a la velocidad de la luz" hacia el corazón ----
+    let enSalto = true;
+    let inicioSalto = null;
+    const DURACION_SALTO = 2; // segundos
+    const fovNormal = camera.fov;
+
+    renderer.setAnimationLoop(() => {
+      const t = reloj.getElapsedTime();
+      if (inicioSalto === null) inicioSalto = t;
+
+      if (enSalto) {
+        const transcurrido = t - inicioSalto;
+        const avance = Math.min(transcurrido / DURACION_SALTO, 1);
+        // suaviza el frenado: rápido al inicio, llegando suave (no tan brusco) al final
+        const suavizado = 1 - Math.pow(1 - avance, 3);
+        radio = RADIO_LEJOS + (RADIO_LLEGADA - RADIO_LEJOS) * suavizado;
+
+        // las estrellas se alargan en rayas mientras "viajamos" y se recogen al llegar
+        const velocidad = 1 - suavizado;
+        actualizarRayasWarp(0.5 + velocidad * 5.5);
+        matRayas.opacity = Math.sin(Math.min(avance * 5, 1) * Math.PI / 2) * velocidad;
+
+        // pequeño efecto de lente por la velocidad, vuelve a lo normal al llegar
+        camera.fov = fovNormal + velocidad * 28;
+        camera.updateProjectionMatrix();
+
+        if (avance >= 1) {
+          enSalto = false;
+          matRayas.opacity = 0;
+          camera.fov = fovNormal;
+          camera.updateProjectionMatrix();
+        }
+      }
+
+      if (!arrastrando && !enSalto) yaw += 0.0006; // suave rotación automática de exploración
+
+      // la cámara orbita alrededor del corazón (coordenadas esféricas): sin importar
+      // hacia dónde gires o qué tanto te alejes, el corazón siempre queda al centro
+      camera.position.x = centroCorazon.x + radio * Math.cos(pitch) * Math.sin(yaw);
+      camera.position.y = centroCorazon.y + radio * Math.sin(pitch);
+      camera.position.z = centroCorazon.z + radio * Math.cos(pitch) * Math.cos(yaw);
+      camera.lookAt(centroCorazon);
+
+      corazonCentral.rotation.y = t * 0.35;
+      const latido = 1 + Math.sin(t * 2.2) * 0.045;
+      corazonCentral.scale.set(latido, latido, latido);
+      aura.scale.set(5.5 + Math.sin(t*2.2)*0.4, 5.5 + Math.sin(t*2.2)*0.4, 1);
+      auraExterior.scale.set(9 + Math.sin(t*2.2)*0.6, 9 + Math.sin(t*2.2)*0.6, 1);
+
+      actualizarFugaces(t);
+
+      // ondulación de las auroras boreales: mucho más movimiento, tipo cortina viva
+      auroras.forEach(a => {
+        const posAttr = a.geo.attributes.position;
+        for (let i = 0; i < posAttr.count; i++) {
+          const x = posAttr.getX(i);
+          const y = posAttr.getY(i);
+          const onda = Math.sin(x * 0.35 + t * 1.4 + a.fase) * 1.7
+                     + Math.sin(x * 0.12 - t * 0.9 + a.fase) * 1.0
+                     + Math.sin(y * 0.5 + t * 1.1 + a.fase * 1.3) * 0.6;
+          posAttr.setZ(i, onda);
+        }
+        posAttr.needsUpdate = true;
+
+        // parpadeo de intensidad
+        a.malla.material.opacity = 0.55 + Math.sin(t * 0.5 + a.fase) * 0.25;
+
+        // cambio continuo de color: rojo -> verde -> morado -> rojo...
+        a.faseColor += a.velColor * 0.05;
+        a.malla.material.color.copy(colorAuroraEnFase(a.faseColor));
+
+        // deriva lenta orbitando alrededor del corazón, para que se sientan vivas
+        a.anguloOrbita += a.velOrbita * 0.01;
+        a.malla.position.x = Math.cos(a.anguloOrbita) * a.radioOrbita;
+        a.malla.position.z = Math.sin(a.anguloOrbita) * a.radioOrbita;
+        a.malla.position.y = a.alturaBase + Math.sin(t * 0.25 + a.fase) * 1.5;
+        a.malla.rotation.y = -a.anguloOrbita + Math.PI / 2;
+      });
+
+      // titileo de las estrellas con destello de cruz
+      estrellasCruz.forEach(e => {
+        const parpadeo = 0.7 + Math.sin(t * 2.5 + e.fase) * 0.3;
+        e.sprite.scale.set(e.escalaBase * parpadeo, e.escalaBase * parpadeo, 1);
+        e.sprite.material.opacity = 0.6 + parpadeo * 0.4;
+      });
+
+      renderer.render(scene, camera);
+    });
+  }
+</script>
+
+</body>
+</html>
